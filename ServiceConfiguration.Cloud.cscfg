@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ServiceConfiguration serviceName="QueueProcessor" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceConfiguration" osFamily="4" osVersion="*" schemaVersion="2014-06.2.4">
+  <Role name="WorkerRole1">
+    <Instances count="1" />
+    <ConfigurationSettings>
+      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="DefaultEndpointsProtocol=https;AccountName=heardqueue;AccountKey=mBAdidz39VosggHzqVFtUJF5bLGPB6R+Kz99xuWRu5DO3m//FsIj0tZ8fKa/Isn1J9IaU5eMVK/e0ZWAIXvb9g==" />
+      <Setting name="QueueConnectionString" value="DefaultEndpointsProtocol=https;AccountName=heardqueue;AccountKey=mBAdidz39VosggHzqVFtUJF5bLGPB6R+Kz99xuWRu5DO3m//FsIj0tZ8fKa/Isn1J9IaU5eMVK/e0ZWAIXvb9g==" />
+    </ConfigurationSettings>
+  </Role>
+</ServiceConfiguration>

@@ -143,6 +143,19 @@ namespace StatsWorker
         }
     }
 
+    class UserBlahStat : DateBase
+    {
+        public string blahId { get; set; }
+        public string userId { get; set; }
+
+
+        public UserBlahStat()
+        {
+            blahId = "";
+            userId = "";
+        }
+    }
+
     class GroupStat : DateBase
     {
         public string groupId { get; set; }

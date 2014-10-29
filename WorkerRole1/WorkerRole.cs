@@ -38,6 +38,7 @@ namespace StatsWorker
         private MongoCollection<ActivityRecord> rawActivity;
         private MongoCollection<SimpleBlah> blahsCol;
         private MongoCollection<SimpleUser> usersCol;
+        private MongoCollection<UserBlahStat> userBlahStats;
         private MongoCollection<WhatsNewInfo> whatsNewCol;
 
         public override void Run()
@@ -96,6 +97,7 @@ namespace StatsWorker
                 rawActivity = statsDB.GetCollection<ActivityRecord>("rawactivity");
                 blahsCol = blahsDB.GetCollection<SimpleBlah>("blahs");
                 usersCol = usersDB.GetCollection<SimpleUser>("users");
+                userBlahStats = statsDB.GetCollection<UserBlahStat>("userblahstats");
                 whatsNewCol = usersDB.GetCollection<WhatsNewInfo>("whatsNew");
 
             }
@@ -303,6 +305,11 @@ namespace StatsWorker
                 query = Query.And(Query.EQ("userId", userId), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
                 update = Update.Inc(propName, 1);
                 userStats.Update(query, update, UpdateFlags.Upsert);
+
+                // userblah has a value
+                query = Query.And(Query.EQ("blahId", objectId), Query.EQ("userId", userId), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
+                update = Update.Inc(propName, 1);
+                userBlahStats.Update(query, update, UpdateFlags.Upsert);
 
                 var ownerQuery = Query<SimpleBlah>.EQ(e => e.Id, new ObjectId(objectId));
                 SimpleBlah theBlah = blahsCol.FindOne(ownerQuery);

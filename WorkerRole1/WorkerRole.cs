@@ -23,12 +23,14 @@ namespace StatsWorker
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         private readonly ManualResetEvent runCompleteEvent = new ManualResetEvent(false);
         private CloudQueue activityQueue = null;
-        private readonly string mongDBString = "mongodb://rs1-1.mongo.blahgua.com:21191,rs1-2.mongo.blahgua.com:21191, rs1-3.mongo.blahgua.com:21191";
+        private readonly string prodDBString = "mongodb://rs1-1.mongo.blahgua.com:21191,rs1-2.mongo.blahgua.com:21191, rs1-3.mongo.blahgua.com:21191";
+        private readonly string qaDBString = "mongodb://qa.db.blahgua.com:21191";
         private MongoClient mongoClient;
         private MongoServer mongoServer;
         private MongoDatabase statsDB;
         private MongoDatabase blahsDB;
         private MongoDatabase usersDB;
+        private bool isProd = false;
 
         // stat collections
         private MongoCollection<BlahStat> blahStats;
@@ -43,7 +45,7 @@ namespace StatsWorker
 
         public override void Run()
         {
-            Trace.TraceInformation("WorkerRole1 is running");
+            Trace.TraceInformation("HeardActivityQueue is running");
 
             try
             {
@@ -59,9 +61,19 @@ namespace StatsWorker
         {
             try
             {
+                if (CloudConfigurationManager.GetSetting("RunMode").Equals("prod", StringComparison.OrdinalIgnoreCase))
+                    isProd = true;
+                else
+                    isProd = false;
+
                 // Retrieve storage account from connection-string.
-                CloudStorageAccount storageAccount =
-                        CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("QueueConnectionString"));
+                string queueString;
+                if (isProd)
+                    queueString = CloudConfigurationManager.GetSetting("ProdConnectionString");
+                else
+                    queueString = CloudConfigurationManager.GetSetting("QAConnectionString");
+
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(queueString);
 
                 // Create the queue client.
                 CloudQueueClient queueClient = storageAccount.CreateCloudQueueClient();
@@ -83,6 +95,12 @@ namespace StatsWorker
         {
             try
             {
+                string mongDBString;
+                if (isProd)
+                    mongDBString = prodDBString;
+                else
+                    mongDBString = qaDBString;
+
                 mongoClient = new MongoClient(mongDBString);
                 mongoServer = mongoClient.GetServer();
                 statsDB = mongoServer.GetDatabase("statsdb");
@@ -121,21 +139,21 @@ namespace StatsWorker
             InitializeActivityQueue();
             InitializeMongo();
 
-            Trace.TraceInformation("WorkerRole1 has been started");
+            Trace.TraceInformation("HeadActivityQueue has been started");
 
             return result;
         }
 
         public override void OnStop()
         {
-            Trace.TraceInformation("WorkerRole1 is stopping");
+            Trace.TraceInformation("HeadActivityQueue is stopping");
 
             this.cancellationTokenSource.Cancel();
             this.runCompleteEvent.WaitOne();
 
             base.OnStop();
 
-            Trace.TraceInformation("WorkerRole1 has stopped");
+            Trace.TraceInformation("HeadActivityQueue has stopped");
         }
 
         private async Task RunAsync(CancellationToken cancellationToken)

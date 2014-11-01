@@ -5,7 +5,9 @@
       <Import moduleName="Diagnostics" />
     </Imports>
     <ConfigurationSettings>
-      <Setting name="QueueConnectionString" />
+      <Setting name="ProdConnectionString" />
+      <Setting name="QAConnectionString" />
+      <Setting name="RunMode" />
     </ConfigurationSettings>
   </WorkerRole>
 </ServiceDefinition>

@@ -257,13 +257,13 @@ namespace StatsWorker
                     String dateStr = curDoc.GetValue("c").ToString();
                     DateTime curDate = DateTime.Parse(dateStr);
                     userId = curVal.ToString();
-                    var query = Query<SimpleUser>.EQ(e => e.Id, new ObjectId(userId));
-                    IMongoUpdate update = Update<SimpleUser>.Set(e => e.LL, curDate);
+                    var query = Query<SimpleUser>.EQ(e => e.Id, ObjectId.Parse(userId));
+                    IMongoUpdate update = Update<SimpleUser>.Set(e => e.ll, curDate);
                     usersCol.Update(query, update, UpdateFlags.Upsert);
 
                     // update logins for the system
-                    query = Query.And(Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
-                    update = Update<SystemStat>.Inc(e => e.loginCount, 1);
+                    query = Query.And(Query.EQ("Y", curDate.Year), Query.EQ("M", curDate.Month), Query.EQ("D", curDate.Day));
+                    update = Update<SystemStat>.Inc(e => e.L, 1);
                     systemStats.Update(query, update, UpdateFlags.Upsert);
                 }
 
@@ -315,27 +315,27 @@ namespace StatsWorker
 
 
                 // blah has a value
-                var query = Query.And(Query.EQ("blahId", objectId), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
+                var query = Query.And(Query.EQ("B", ObjectId.Parse(objectId)), Query.EQ("Y", curDate.Year), Query.EQ("M", curDate.Month), Query.EQ("D", curDate.Day));
                 IMongoUpdate update = Update.Inc(propName, 1);
                 blahStats.Update(query, update, UpdateFlags.Upsert);
 
                 // user has a value
-                query = Query.And(Query.EQ("userId", userId), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
+                query = Query.And(Query.EQ("U", ObjectId.Parse(userId)), Query.EQ("Y", curDate.Year), Query.EQ("M", curDate.Month), Query.EQ("D", curDate.Day));
                 update = Update.Inc(propName, 1);
                 userStats.Update(query, update, UpdateFlags.Upsert);
 
                 // userblah has a value
-                query = Query.And(Query.EQ("blahId", objectId), Query.EQ("userId", userId), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
+                query = Query.And(Query.EQ("B", ObjectId.Parse(objectId)), Query.EQ("U", ObjectId.Parse(userId)), Query.EQ("Y", curDate.Year), Query.EQ("M", curDate.Month), Query.EQ("D", curDate.Day));
                 update = Update.Inc(propName, 1);
                 userBlahStats.Update(query, update, UpdateFlags.Upsert);
 
-                var ownerQuery = Query<SimpleBlah>.EQ(e => e.Id, new ObjectId(objectId));
+                var ownerQuery = Query<SimpleBlah>.EQ(e => e.Id, ObjectId.Parse(objectId));
                 SimpleBlah theBlah = blahsCol.FindOne(ownerQuery);
                 if (theBlah != null)
                 {
                     // blah owner's content has a value
-                    query = Query.And(Query.EQ("userId", theBlah.A), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
-                    update = Update.Inc("contentStats." + propName, 1);
+                    query = Query.And(Query.EQ("U", theBlah.A), Query.EQ("Y", curDate.Year), Query.EQ("M", curDate.Month), Query.EQ("D", curDate.Day));
+                    update = Update.Inc("S." + propName, 1);
                     userStats.Update(query, update, UpdateFlags.Upsert);
 
                     // owner has something new!
@@ -344,25 +344,25 @@ namespace StatsWorker
                         query = Query<WhatsNewInfo>.EQ(e => e.U, theBlah.A);
                         WhatsNewInfo curInfo = whatsNewCol.FindOne(query);
                         if (curInfo == null)
-                            update = Update.Combine(Update.Set("lastUpdate", DateTime.Now),
+                            update = Update.Combine(Update.Set("u", DateTime.Now),
                                 Update.Inc(whatsNewName, 1),
-                                Update.Set("message", "New activity since " +  DateTime.Now.ToShortDateString()));
+                                Update.Set("M", "New activity since " +  DateTime.Now.ToShortDateString()));
                         else
-                            update = Update.Combine(Update.Set("lastUpdate", DateTime.Now),
+                            update = Update.Combine(Update.Set("u", DateTime.Now),
                                 Update.Inc(whatsNewName, 1));
                         whatsNewCol.Update(query, update, UpdateFlags.Upsert);
                     }
 
 
                     // group has a value
-                    query = Query.And(Query.EQ("groupId", theBlah.G), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
+                    query = Query.And(Query.EQ("G", theBlah.G), Query.EQ("Y", curDate.Year), Query.EQ("M", curDate.Month), Query.EQ("D", curDate.Day));
                     update = Update.Inc(propName, 1);
                     groupStats.Update(query, update, UpdateFlags.Upsert);
                 }
 
 
                 // system has a value
-                query = Query.And(Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
+                query = Query.And(Query.EQ("Y", curDate.Year), Query.EQ("M", curDate.Month), Query.EQ("D", curDate.Day));
                 update = Update.Inc(propName, 1);
                 systemStats.Update(query, update, UpdateFlags.Upsert);
 
@@ -378,12 +378,12 @@ namespace StatsWorker
 
         private bool RecordViewPost(BsonDocument curDoc)
         {
-            return IncrementProperty(curDoc, "viewCount", "newViews");
+            return IncrementProperty(curDoc, "V", "V");
         }
 
         private bool RecordOpenPost(BsonDocument curDoc)
         {
-            return IncrementProperty(curDoc, "openCount", "newOpens");
+            return IncrementProperty(curDoc, "O", "O");
         }
 
         private bool RecordVotePost(BsonDocument curDoc)
@@ -396,9 +396,9 @@ namespace StatsWorker
                 isPromote = (curVal.ToInt64() > 0);
 
                 if (isPromote)
-                    return IncrementProperty(curDoc, "upVoteCount", "newUpVotes");
+                    return IncrementProperty(curDoc, "P", "P");
                 else
-                    return IncrementProperty(curDoc, "downVoteCount", "newDownVotes");
+                    return IncrementProperty(curDoc, "N", "N");
             }
                 
             else
@@ -467,9 +467,9 @@ namespace StatsWorker
                 isPromote = (curVal.ToInt64() > 0);
 
                 if (isPromote)
-                    return IncrementProperty(curDoc, "commentUpVoteCount", "newCommentUpVotes");
+                    return IncrementProperty(curDoc, "CP", "CP");
                 else
-                    return IncrementProperty(curDoc, "commentDownVoteCount", "newCommentDownVotes");
+                    return IncrementProperty(curDoc, "CN", "CN");
             }
 
             else
@@ -479,13 +479,13 @@ namespace StatsWorker
 
         private bool RecordSubmitPost(BsonDocument curDoc)
         {
-            return IncrementProperty(curDoc, "postCount", "newPosts");
+            return IncrementProperty(curDoc, "NP", "NP");
 
         }
 
         private bool RecordSubmitComment(BsonDocument curDoc)
         {
-            return IncrementProperty(curDoc, "commentCount", "newComments");
+            return IncrementProperty(curDoc, "C", "C");
         }
 
         private bool HandleResetWhatsNew(BsonDocument curDoc)
@@ -499,7 +499,7 @@ namespace StatsWorker
                 {
                     try
                     {
-                        WhatsNewInfo newDoc = whatsNewCol.FindOne(Query<WhatsNewInfo>.EQ(e => e.U, userId));
+                        WhatsNewInfo newDoc = whatsNewCol.FindOne(Query<WhatsNewInfo>.EQ(e => e.U, ObjectId.Parse(userId)));
                         if (newDoc != null)
                         {
                             newDoc.Clear();

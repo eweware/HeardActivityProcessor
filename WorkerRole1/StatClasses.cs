@@ -13,22 +13,22 @@ namespace StatsWorker
     class SimpleBlah
     {
         public ObjectId Id { get; set; }
-        public string G { get; set; }
-        public string A { get; set; }
+        public ObjectId G { get; set; }
+        public ObjectId A { get; set; }
     }
 
     [BsonIgnoreExtraElements]
     class SimpleUser
     {
         public ObjectId Id { get; set; }
-        public DateTime LL { get; set; }
+        public DateTime ll { get; set; }
     }
 
     [BsonIgnoreExtraElements]
     class WhatsNewInfo
     {
         public ObjectId Id { get; set; }
-        public string U { get; set; }
+        public ObjectId U { get; set; }
         public long newComments { get; set; }
         public long newOpens { get; set; }
         public long newUpVotes { get; set; }
@@ -43,7 +43,7 @@ namespace StatsWorker
 
         public WhatsNewInfo()
         {
-            U = "";
+            U = ObjectId.Empty;
             Clear();
         }
 
@@ -119,14 +119,14 @@ namespace StatsWorker
 
     class UserStat : DateBase
     { 
-        public string userId { get; set; }
+        public ObjectId userId { get; set; }
 
         public long postCount { get; set; }
         public BaseStat contentStats { get; set; }
 
         public UserStat ()
         {
-            userId = "";
+            userId = ObjectId.Empty;
             postCount = 0;
         }
 
@@ -134,43 +134,43 @@ namespace StatsWorker
 
     class BlahStat : DateBase 
     {
-        public string blahId { get; set; }
+        public ObjectId blahId { get; set; }
 
 
         public BlahStat()
         {
-            blahId = "";
+            blahId = ObjectId.Empty;
         }
     }
 
     class UserBlahStat : DateBase
     {
-        public string blahId { get; set; }
-        public string userId { get; set; }
+        public ObjectId blahId { get; set; }
+        public ObjectId userId { get; set; }
 
 
         public UserBlahStat()
         {
-            blahId = "";
-            userId = "";
+            blahId = ObjectId.Empty;
+            userId = ObjectId.Empty;
         }
     }
 
     class GroupStat : DateBase
     {
-        public string groupId { get; set; }
+        public ObjectId groupId { get; set; }
         public long postCount { get; set; }
 
         public GroupStat()
         {
-            groupId = "";
+            groupId = ObjectId.Empty;
         }
     }
 
     class SystemStat : DateBase
     {
-        public long loginCount { get; set; }
-        public long postCount { get; set; }
+        public long L { get; set; }
+        public long NP { get; set; }
     }
 
     class ActivityRecord

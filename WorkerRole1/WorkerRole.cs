@@ -30,6 +30,7 @@ namespace StatsWorker
         private MongoDatabase statsDB;
         private MongoDatabase blahsDB;
         private MongoDatabase usersDB;
+        private MongoDatabase infoDB;
         private bool isProd = false;
 
         // stat collections
@@ -42,6 +43,8 @@ namespace StatsWorker
         private MongoCollection<SimpleUser> usersCol;
         private MongoCollection<UserBlahStat> userBlahStats;
         private MongoCollection<WhatsNewInfo> whatsNewCol;
+        private MongoCollection blahInfoCol;
+        private MongoCollection userGroupInfoCol;
 
         public override void Run()
         {
@@ -106,6 +109,7 @@ namespace StatsWorker
                 statsDB = mongoServer.GetDatabase("statsdb");
                 blahsDB = mongoServer.GetDatabase("blahdb");
                 usersDB = mongoServer.GetDatabase("userdb");
+                infoDB = mongoServer.GetDatabase("infodb");
 
                 // collections
                 blahStats = statsDB.GetCollection<BlahStat>("blahstats");
@@ -118,6 +122,8 @@ namespace StatsWorker
                 userBlahStats = statsDB.GetCollection<UserBlahStat>("userblahstats");
                 whatsNewCol = usersDB.GetCollection<WhatsNewInfo>("whatsNew");
 
+                blahInfoCol = infoDB.GetCollection("blahInfo");
+                userGroupInfoCol = infoDB.GetCollection("userGroupInfo");
             }
             catch(Exception exp)
             {
@@ -319,6 +325,11 @@ namespace StatsWorker
                 IMongoUpdate update = Update.Inc(propName, 1);
                 blahStats.Update(query, update, UpdateFlags.Upsert);
 
+                // blahInfo has a value
+                query = Query.EQ("_id", ObjectId.Parse(objectId));
+                update = Update.Inc("N." + propName, 1);
+                blahInfoCol.Update(query, update);
+
                 // user has a value
                 query = Query.And(Query.EQ("U", ObjectId.Parse(userId)), Query.EQ("Y", curDate.Year), Query.EQ("M", curDate.Month), Query.EQ("D", curDate.Day));
                 update = Update.Inc(propName, 1);
@@ -333,6 +344,11 @@ namespace StatsWorker
                 SimpleBlah theBlah = blahsCol.FindOne(ownerQuery);
                 if (theBlah != null)
                 {
+                    // userGroupInfo has a value
+                    query = Query.And(Query.EQ("U", theBlah.A), Query.EQ("G", theBlah.G));
+                    update = Update.Inc("N." + propName, 1);
+                    userGroupInfoCol.Update(query, update);
+
                     // blah owner's content has a value
                     query = Query.And(Query.EQ("U", theBlah.A), Query.EQ("Y", curDate.Year), Query.EQ("M", curDate.Month), Query.EQ("D", curDate.Day));
                     update = Update.Inc("S." + propName, 1);

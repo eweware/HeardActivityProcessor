@@ -305,6 +305,7 @@ namespace StatsWorker
                 String dateStr = curDoc.GetValue("c").ToString();
                 DateTime curDate = DateTime.Parse(dateStr);
                 String objectId = curDoc.GetValue("o").ToString();
+                BsonDateTime dateObj = new BsonDateTime(new DateTime(curDate.Year, curDate.Month, curDate.Day));
                 String userId;
                 BsonValue curVal;
 
@@ -318,15 +319,21 @@ namespace StatsWorker
                 var query = Query.And(Query.EQ("blahId", objectId), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
                 IMongoUpdate update = Update.Inc(propName, 1);
                 blahStats.Update(query, update, UpdateFlags.Upsert);
+                update = Update.Set("date", dateObj);
+                blahStats.Update(query, update, UpdateFlags.Upsert);
 
                 // user has a value
                 query = Query.And(Query.EQ("userId", userId), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
                 update = Update.Inc(propName, 1);
                 userStats.Update(query, update, UpdateFlags.Upsert);
+                update = Update.Set("date", dateObj);
+                userStats.Update(query, update, UpdateFlags.Upsert);
 
                 // userblah has a value
                 query = Query.And(Query.EQ("blahId", objectId), Query.EQ("userId", userId), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
                 update = Update.Inc(propName, 1);
+                userBlahStats.Update(query, update, UpdateFlags.Upsert);
+                update = Update.Set("date", dateObj);
                 userBlahStats.Update(query, update, UpdateFlags.Upsert);
 
                 var ownerQuery = Query<SimpleBlah>.EQ(e => e.Id, new ObjectId(objectId));
@@ -337,6 +344,7 @@ namespace StatsWorker
                     query = Query.And(Query.EQ("userId", theBlah.A), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
                     update = Update.Inc("contentStats." + propName, 1);
                     userStats.Update(query, update, UpdateFlags.Upsert);
+
 
                     // owner has something new!
                     if (!String.IsNullOrEmpty(whatsNewName))
@@ -358,12 +366,16 @@ namespace StatsWorker
                     query = Query.And(Query.EQ("groupId", theBlah.G), Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
                     update = Update.Inc(propName, 1);
                     groupStats.Update(query, update, UpdateFlags.Upsert);
+                    update = Update.Set("date", dateObj);
+                    groupStats.Update(query, update, UpdateFlags.Upsert);
                 }
 
 
                 // system has a value
                 query = Query.And(Query.EQ("year", curDate.Year), Query.EQ("month", curDate.Month), Query.EQ("day", curDate.Day));
                 update = Update.Inc(propName, 1);
+                systemStats.Update(query, update, UpdateFlags.Upsert);
+                update = Update.Set("date", dateObj);
                 systemStats.Update(query, update, UpdateFlags.Upsert);
 
                 handled = true;
